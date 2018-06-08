@@ -16,12 +16,14 @@ func getResponse(u string) response {
 	resp, err := http.Get(u)
 	if err != nil {
 		scrapeResp.Err = "Error connecting to the website."
+		return scrapeResp
 	}
 	scrapeResp.Images = findImages(resp)
 
 	resp, err = http.Get(u)
 	if err != nil {
 		scrapeResp.Err = "Error connecting to the website."
+		return scrapeResp
 	}
 	scrapeResp.Words = findWords(resp)
 	return scrapeResp
@@ -89,10 +91,7 @@ func addHost(url string, host string) string {
 }
 
 func findWords(r *http.Response) words {
-	doc, err := goquery.NewDocumentFromReader(r.Body)
-	if err != nil {
-		// handle
-	}
+	doc, _ := goquery.NewDocumentFromReader(r.Body)
 	defer r.Body.Close()
 
 	doc.Find("script").Remove()

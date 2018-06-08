@@ -59,14 +59,16 @@ func (w wordList) Len() int      { return len(w) }
 func (w wordList) Swap(i, j int) { w[i], w[j] = w[j], w[i] }
 
 func main() {
+	ip := ":"
 	port := os.Getenv("PORT")
 	if port == "" {
+		ip = "127.0.0.1:"
 		port = "8000"
 	}
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/pageinfo", getPageInfo).Methods("GET")
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Fatal(http.ListenAndServe(ip+port, router))
 }
 
 func getPageInfo(w http.ResponseWriter, r *http.Request) {

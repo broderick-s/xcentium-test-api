@@ -1,5 +1,5 @@
 # Binaries for programs and plugins
-*.exe
+# *.exe allowing for exe to show on repo
 *.exe~
 *.dll
 *.so

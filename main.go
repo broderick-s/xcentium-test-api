@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -58,9 +59,14 @@ func (w wordList) Len() int      { return len(w) }
 func (w wordList) Swap(i, j int) { w[i], w[j] = w[j], w[i] }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+
 	router := mux.NewRouter()
 	router.HandleFunc("/api/pageinfo", getPageInfo).Methods("GET")
-	log.Fatal(http.ListenAndServe(":8000", router))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 func getPageInfo(w http.ResponseWriter, r *http.Request) {

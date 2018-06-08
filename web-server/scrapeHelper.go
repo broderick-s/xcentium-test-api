@@ -17,7 +17,6 @@ func getResponse(u string) response {
 	if err != nil {
 		scrapeResp.Err = "Error connecting to the website."
 	}
-
 	scrapeResp.Images = findImages(resp)
 
 	resp, err = http.Get(u)
@@ -34,31 +33,42 @@ func findImages(r *http.Response) []image {
 	defer r.Body.Close()
 
 	imgs := []image{}
+
+	eofFound := false
 	for {
+		if eofFound {
+			break
+		}
 		htmlTok := t.Next()
 
 		switch {
 		case htmlTok == html.ErrorToken:
-			return imgs // EOF return
+			eofFound = true // break would only break out of switch
 		case htmlTok == html.StartTagToken || htmlTok == html.SelfClosingTagToken:
 			tok := t.Token()
 			if strings.ToLower(tok.Data) == "img" {
-				img, ok := parseImgTag(tok.Attr)
+				img, ok := parseImgTag(tok.Attr, r.Request.URL.Host)
 				if ok {
 					imgs = append(imgs, img)
 				}
 			}
 		}
 	}
+
+	return imgs
 }
 
-func parseImgTag(attrs []html.Attribute) (image, bool) {
+func parseImgTag(attrs []html.Attribute, host string) (image, bool) {
 	img := image{}
 	ok := false
 	for _, attr := range attrs {
 		switch strings.ToLower(attr.Key) {
 		case "src":
-			img.ImgURL = attr.Val
+			imgPath := attr.Val
+			if !strings.HasPrefix(imgPath, "http") {
+				imgPath = addHost(imgPath, host)
+			}
+			img.ImgURL = imgPath
 			ok = true // only URL is required
 		case "alt":
 			img.Desc = attr.Val
@@ -69,6 +79,13 @@ func parseImgTag(attrs []html.Attribute) (image, bool) {
 	}
 
 	return img, ok
+}
+
+func addHost(url string, host string) string {
+	host = "//" + host
+	url = "/" + url
+
+	return host + url
 }
 
 func findWords(r *http.Response) words {
@@ -97,7 +114,7 @@ func getTopWords(allWords []string) words {
 	counts := make(map[string]int)
 	totalCount := 0
 	for _, w := range allWords {
-		// workaround - go regex does not have exceptions
+		// workaround - golang regex does not have exceptions
 		// was unable to remove newline chars
 		if w != "n" {
 			counts[w]++

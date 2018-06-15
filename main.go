@@ -67,11 +67,14 @@ func main() {
 	}
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/pageinfo", getPageInfo).Methods("GET")
+	router.HandleFunc("/api/pageinfo", getPageInfo).Methods("GET", "OPTIONS")
 	log.Fatal(http.ListenAndServe(ip+port, router))
 }
 
 func getPageInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
 	enc := json.NewEncoder(w)
 	q := r.URL.Query()
 	urlQuery, ok := q["url"]
